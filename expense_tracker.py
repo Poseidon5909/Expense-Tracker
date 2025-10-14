@@ -23,7 +23,7 @@ def add_expense():
     writer = csv.writer(file)
     writer.writerow([date, category, amount, description])
 
-  print("✅ Expense added successfully!")  
+  print("✅ Expense added successfully!")
 
 #Function to view all expenses
 def view_expenses()  :
@@ -33,24 +33,25 @@ def view_expenses()  :
       for row in reader:
         print(row)
   except FileNotFoundError:
-    print("⚠️ No expenses found! Add some first.")   
+    print("⚠️ No expenses found! Add some first.")
 
 
 #Function to show total spending by category
 def total_by_category():
   totals = {}
   try:
-    with open(FILENAME, 'r')as file:
+    with open(FILENAME, 'r') as file:
       reader = csv.DictReader(file)
       for row in reader:
-          category = row["Category"]
-          amount = float(row["Amount"])
-          totals[category] = totals.get(category,0) + amount
-    print("\n📊 Total spending by category:")  
+        category = row["Category"]
+        amount = float(row["Amount"])
+        totals[category] = totals.get(category, 0) + amount
+
+    print("\n📊 Total spending by category:")
     for cat, total in totals.items():
       print(f"  {cat}: ₹{total:.2f}")
   except FileNotFoundError:
-    print("⚠️ No expenses found!")    
+    print("⚠️ No expenses found!")
 
 
 # Main menu
