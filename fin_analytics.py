@@ -1,97 +1,75 @@
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from db.db.db_connect import get_connection
 
-# PIE CHART → TOTAL SPENDING BY CATEGORY
 
-def show_category_expense_chart():
-  conn = get_connection()
-  if conn is None:
-    return
-  
-  try:
-      cursor = conn.cursor()
-      query = """
-          SELECT category, SUM(amount)
-          FROM fin_expenses
-          GROUP BY Category
-          ORDER BY SUM(amount) DESC;
-      """
-      cursor.execute(query)
-      data = cursor.fetchall()
+def category_chart(file_path="category_chart.png"):
+    """Generate a pie chart of expenses by category."""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT category, SUM(amount) 
+            FROM fin_expenses 
+            GROUP BY category 
+            ORDER BY SUM(amount) DESC;
+        """)
+        data = cur.fetchall()
+        cur.close()
+        conn.close()
 
-      if not data:
-         print("No data found. Please add some expenses first.")
-         return
-      
-      categories = [row[0] for row in data]
-      totals = [float(row[1]) for row in data]
+        if not data:
+            print("⚠️ No expense data available for category chart.")
+            return None
 
-      plt.figure(figsize=(8, 8))
-      plt.pie(
-         totals,
-         labels=categories,
-         autopct=lambda p: f'{p:.1f}%' if p > 0 else '',
-         startangle=90
-      )
+        categories = [row[0] for row in data]
+        amounts = [row[1] for row in data]
 
-      plt.title("💰 Total Spending by Category")
-      file_path = "category_expense_chart.png"
-      plt.savefig(file_path)
-      plt.close()
-      print(f"✅ Category chart successfully saved to {file_path}")
-      
+        plt.figure(figsize=(6, 6))
+        plt.pie(amounts, labels=categories, autopct="%1.1f%%", startangle=140)
+        plt.title("Expenses by Category", fontsize=14, fontweight="bold")
+        plt.tight_layout()
+        plt.savefig(file_path)
+        plt.close()
+        print(f"✅ Category chart saved to {file_path}")
+        return file_path
+    except Exception as e:
+        print("❌ Error generating category chart:", e)
+        return None
 
-  except Exception as e:
-     print("❌ Error generating category chart:", e)
-  finally:
-     conn.close()    
 
-# BAR CHART → MONTHLY EXPENSES
+def monthly_chart(file_path="monthly_chart.png"):
+    """Generate a bar chart of monthly total expenses."""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT TO_CHAR(date, 'YYYY-MM') AS month, SUM(amount)
+            FROM fin_expenses
+            GROUP BY month
+            ORDER BY month;
+        """)
+        data = cur.fetchall()
+        cur.close()
+        conn.close()
 
-def  show_monthly_expense_chart():
-   conn = get_connection()
-   if conn is None:
-      return
-   
-   try:
-       cursor = conn.cursor()
-       query = """
-          SELECT TO_CHAR(date, 'YYYY-MM') AS month, SUM(amount)
-          FROM fin_expenses
-          GROUP By month
-          ORDER By month
-       """
+        if not data:
+            print("⚠️ No expense data available for monthly chart.")
+            return None
 
-       cursor.execute(query)
-       data = cursor.fetchall()
+        months = [row[0] for row in data]
+        totals = [row[1] for row in data]
 
-       if not data:
-         print("No data found. Please add some expenses first.")
-         return
-      
-       months = [row[0] for row in data]
-       totals = [float(row[1]) for row in data]
-
-       plt.figure(figsize=(10, 6))
-       plt.bar(months, totals)
-       plt.xlabel("Month")
-       plt.ylabel("Total Spent(₹)")
-       plt.title("📅 Monthly Spending Overview")
-       plt.xticks(rotation=45)
-       plt.tight_layout()
-       file_path = "monthly_expense_chart.png"
-       plt.savefig(file_path)
-       plt.close() # Close the figure to free memory
-       print(f"✅ Monthly chart successfully saved to {file_path}")
-       
-
-   except Exception as e:
-      print("❌ Error generating monthly chart:", e)
-   finally:
-      conn.close()   
-
-if __name__ == "__main__":
-    show_category_expense_chart()
-    show_monthly_expense_chart()
+        plt.figure(figsize=(8, 5))
+        plt.bar(months, totals)
+        plt.title("Monthly Expense Trend", fontsize=14, fontweight="bold")
+        plt.xlabel("Month")
+        plt.ylabel("Total Amount (₹)")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig(file_path)
+        plt.close()
+        print(f"✅ Monthly chart saved to {file_path}")
+        return file_path
+    except Exception as e:
+        print("❌ Error generating monthly chart:", e)
+        return None
